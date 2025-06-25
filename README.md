@@ -48,5 +48,7 @@ SCPBuff is a plugin for SCP: Secret Laboratory servers that allows you to fine-t
 # Requirements
 **EXILED 9.6.1** or later
 
+Also, if you notice any bugs, please inform the plugin owner on Discord: @mrdarvi
+
 # An example in the photo
 ![scpbuff](https://github.com/user-attachments/assets/08bda5bb-d846-441f-9b08-e3070a33834f)
