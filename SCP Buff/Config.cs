@@ -17,7 +17,8 @@ namespace SCPBuff
             [RoleTypeId.Scp049] = new ScpConfig { Health = 2500, HumeShield = 300, IsEnabled = true },
             [RoleTypeId.Scp939] = new ScpConfig { Health = 2700, HumeShield = 350, IsEnabled = true },
             [RoleTypeId.Scp3114] = new ScpConfig { Health = 1250, HumeShield = 350, IsEnabled = true },
-            [RoleTypeId.Scp0492] = new ScpConfig { Health = 400, HumeShield = 0, IsEnabled = true }
+            [RoleTypeId.Scp0492] = new ScpConfig { Health = 400, HumeShield = 0, IsEnabled = true },
+            [RoleTypeId.Scp079] = new ScpConfig { Health = 0, HumeShield = 0, IsEnabled = true } // SCP-079 was added to the plugin in version V1.0.1
         };
     }
 

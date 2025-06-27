@@ -11,7 +11,7 @@ namespace SCPBuff
 {
     public static class RoleExtensions
     {
-        public static bool IsSCP(this RoleTypeId role) => role.GetTeam() == Team.SCPs && role != RoleTypeId.Scp079;
+        public static bool IsSCP(this RoleTypeId role) => role.GetTeam() == Team.SCPs;
     }
 
     public class SCPBuff : Plugin<Config>
@@ -27,7 +27,7 @@ namespace SCPBuff
         public override string Author => "MrDarvi";
         public override string Name => "SCPBuff";
         public override string Prefix => "scpbuff";
-        public override Version Version => new Version(1, 0, 0);
+        public override Version Version => new Version(1, 0, 1);
         public override Version RequiredExiledVersion => new Version(9, 6, 1);
 
         public static SCPBuff Instance;
@@ -75,13 +75,18 @@ namespace SCPBuff
                 if (player.ReferenceHub.serverRoles.BypassMode)
                     return;
 
+                // Check if SCP is enabled in config
                 if (!Config.ScpConfigs.TryGetValue(player.Role, out var scpConfig) || !scpConfig.IsEnabled)
                 {
                     SetAlternativeRole(player);
                     return;
                 }
 
-                // Repeated use at intervals
+                // For SCP-079, don't apply health settings
+                if (player.Role == RoleTypeId.Scp079)
+                    return;
+
+                // Apply settings with delay for other SCPs
                 for (int i = 0; i < 5; i++)
                 {
                     Timing.CallDelayed(0.2f * i, () => ApplyScpSettings(player, scpConfig));
@@ -95,9 +100,17 @@ namespace SCPBuff
 
         private void SetAlternativeRole(Player player)
         {
-            var random = new Random();
-            var newRole = _alternativeRoles[random.Next(_alternativeRoles.Count)];
-            player.Role.Set(newRole);
+            try
+            {
+                var random = new Random();
+                var newRole = _alternativeRoles[random.Next(_alternativeRoles.Count)];
+                player.Role.Set(newRole);
+                Log.Debug($"[SCPBuff] Changed {player.Nickname}'s role to {newRole} because their SCP was disabled");
+            }
+            catch (Exception e)
+            {
+                Log.Error($"SetAlternativeRole error: {e}");
+            }
         }
 
         private void ApplyScpSettings(Player player, ScpConfig scpConfig)
@@ -107,23 +120,24 @@ namespace SCPBuff
                 if (!player.IsAlive || !player.IsScp)
                     return;
 
-                // Special settings for SCP-3114 (skeleton)
+                // Special settings for SCP-3114
                 if (player.Role == RoleTypeId.Scp3114)
                 {
                     player.MaxHealth = 550;
                     player.Health = 550;
                     player.MaxHumeShield = 100;
-                    player.HumeShield = Math.Min(player.HumeShield, 100); // Жесткая блокировка HS
+                    player.HumeShield = Math.Min(player.HumeShield, 100);
                     return;
                 }
 
-                // For the rest of the SCP
+                // For other SCPs
                 player.MaxHealth = scpConfig.Health;
                 player.Health = scpConfig.Health;
                 player.MaxHumeShield = scpConfig.HumeShield;
                 player.HumeShield = scpConfig.HumeShield;
 
-                Log.Debug($"[SCPBuff] Applied to {player.Nickname} ({player.Role}): HP={player.Health}, HS={player.HumeShield}");
+                if (Config.Debug)
+                    Log.Debug($"[SCPBuff] Applied to {player.Nickname} ({player.Role}): HP={player.Health}, HS={player.HumeShield}");
             }
             catch (Exception e)
             {
