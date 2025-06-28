@@ -27,7 +27,7 @@ namespace SCPBuff
         public override string Author => "MrDarvi";
         public override string Name => "SCPBuff";
         public override string Prefix => "scpbuff";
-        public override Version Version => new Version(1, 0, 1);
+        public override Version Version => new Version(1, 0, 2); 
         public override Version RequiredExiledVersion => new Version(9, 6, 1);
 
         public static SCPBuff Instance;
@@ -71,25 +71,29 @@ namespace SCPBuff
                 if (player == null || !player.IsAlive || !player.IsScp)
                     return;
 
-                // Skip administrators
                 if (player.ReferenceHub.serverRoles.BypassMode)
                     return;
 
-                // Check if SCP is enabled in config
                 if (!Config.ScpConfigs.TryGetValue(player.Role, out var scpConfig) || !scpConfig.IsEnabled)
                 {
-                    SetAlternativeRole(player);
+                    if (player.Role != RoleTypeId.Scp3114) 
+                        SetAlternativeRole(player);
                     return;
                 }
 
-                // For SCP-079, don't apply health settings
                 if (player.Role == RoleTypeId.Scp079)
                     return;
 
-                // Apply settings with delay for other SCPs
-                for (int i = 0; i < 5; i++)
+                // For all SCPs, including 3114, apply the settings immediately
+                ApplyScpSettings(player, scpConfig);
+
+                // Additional calls are only for debugging purposes or if there are application issues
+                if (Config.Debug)
                 {
-                    Timing.CallDelayed(0.2f * i, () => ApplyScpSettings(player, scpConfig));
+                    for (int i = 1; i <= 2; i++)
+                    {
+                        Timing.CallDelayed(0.2f * i, () => ApplyScpSettings(player, scpConfig));
+                    }
                 }
             }
             catch (Exception e)
@@ -120,17 +124,6 @@ namespace SCPBuff
                 if (!player.IsAlive || !player.IsScp)
                     return;
 
-                // Special settings for SCP-3114
-                if (player.Role == RoleTypeId.Scp3114)
-                {
-                    player.MaxHealth = 550;
-                    player.Health = 550;
-                    player.MaxHumeShield = 100;
-                    player.HumeShield = Math.Min(player.HumeShield, 100);
-                    return;
-                }
-
-                // For other SCPs
                 player.MaxHealth = scpConfig.Health;
                 player.Health = scpConfig.Health;
                 player.MaxHumeShield = scpConfig.HumeShield;
