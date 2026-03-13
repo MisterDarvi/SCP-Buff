@@ -12,34 +12,38 @@ namespace SCPBuff
         public Dictionary<RoleTypeId, RoleConfig> RoleConfigs { get; set; } = new Dictionary<RoleTypeId, RoleConfig>
         {
             // SCPs
-            [RoleTypeId.Scp173] = new RoleConfig { Health = 4500, HumeShield = 750, IsEnabled = true },
-            [RoleTypeId.Scp096] = new RoleConfig { Health = 3000, HumeShield = 500, IsEnabled = true },
-            [RoleTypeId.Scp106] = new RoleConfig { Health = 2300, HumeShield = 350, IsEnabled = true },
-            [RoleTypeId.Scp049] = new RoleConfig { Health = 2500, HumeShield = 300, IsEnabled = true },
-            [RoleTypeId.Scp939] = new RoleConfig { Health = 2700, HumeShield = 350, IsEnabled = true },
-            [RoleTypeId.Scp3114] = new RoleConfig { Health = 1250, HumeShield = 350, IsEnabled = true },
-            [RoleTypeId.Scp0492] = new RoleConfig { Health = 400, HumeShield = 0, IsEnabled = true },
-            [RoleTypeId.Scp079] = new RoleConfig { Health = 0, HumeShield = 0, IsEnabled = true },
+            [RoleTypeId.Scp173] = new RoleConfig { Health = 4500, HumeShield = 750, IsEnabled = true, IsGod = false },
+            [RoleTypeId.Scp096] = new RoleConfig { Health = 3000, HumeShield = 500, IsEnabled = true, IsGod = false },
+            [RoleTypeId.Scp106] = new RoleConfig { Health = 2300, HumeShield = 350, IsEnabled = true, IsGod = false },
+            [RoleTypeId.Scp049] = new RoleConfig { Health = 2500, HumeShield = 300, IsEnabled = true, IsGod = false },
+            [RoleTypeId.Scp939] = new RoleConfig { Health = 2700, HumeShield = 350, IsEnabled = true, IsGod = false },
+            [RoleTypeId.Scp3114] = new RoleConfig { Health = 1250, HumeShield = 350, IsEnabled = true, IsGod = false },
+            [RoleTypeId.Scp0492] = new RoleConfig { Health = 400, HumeShield = 100, IsEnabled = true, IsGod = false },
+            [RoleTypeId.Scp079] = new RoleConfig { Health = 0, HumeShield = 0, IsEnabled = true, IsGod = false },
 
             // Human Classes
-            [RoleTypeId.ClassD] = new RoleConfig { Health = 100, HumeShield = 0, IsEnabled = true },
-            [RoleTypeId.Scientist] = new RoleConfig { Health = 100, HumeShield = 0, IsEnabled = true },
-            [RoleTypeId.FacilityGuard] = new RoleConfig { Health = 100, HumeShield = 50, IsEnabled = true },
+            [RoleTypeId.ClassD] = new RoleConfig { Health = 100, HumeShield = 0, IsEnabled = true, IsGod = false },
+            [RoleTypeId.Scientist] = new RoleConfig { Health = 100, HumeShield = 0, IsEnabled = true, IsGod = false },
+            [RoleTypeId.FacilityGuard] = new RoleConfig { Health = 100, HumeShield = 0, IsEnabled = true, IsGod = false },
 
             // Chaos Insurgency
-            [RoleTypeId.ChaosConscript] = new RoleConfig { Health = 120, HumeShield = 50, IsEnabled = true },
-            [RoleTypeId.ChaosRepressor] = new RoleConfig { Health = 140, HumeShield = 100, IsEnabled = true },
-            [RoleTypeId.ChaosMarauder] = new RoleConfig { Health = 160, HumeShield = 150, IsEnabled = true },
-            [RoleTypeId.ChaosRifleman] = new RoleConfig { Health = 130, HumeShield = 75, IsEnabled = true },
+            [RoleTypeId.ChaosConscript] = new RoleConfig { Health = 100, HumeShield = 0, IsEnabled = true, IsGod = false },
+            [RoleTypeId.ChaosRepressor] = new RoleConfig { Health = 100, HumeShield = 0, IsEnabled = true, IsGod = false },
+            [RoleTypeId.ChaosMarauder] = new RoleConfig { Health = 100, HumeShield = 0, IsEnabled = true, IsGod = false },
+            [RoleTypeId.ChaosRifleman] = new RoleConfig { Health = 100, HumeShield = 0, IsEnabled = true, IsGod = false },
 
             // Foundation Forces
-            [RoleTypeId.NtfPrivate] = new RoleConfig { Health = 110, HumeShield = 50, IsEnabled = true },
-            [RoleTypeId.NtfSergeant] = new RoleConfig { Health = 130, HumeShield = 100, IsEnabled = true },
-            [RoleTypeId.NtfSpecialist] = new RoleConfig { Health = 150, HumeShield = 150, IsEnabled = true },
-            [RoleTypeId.NtfCaptain] = new RoleConfig { Health = 170, HumeShield = 200, IsEnabled = true },
+            [RoleTypeId.NtfPrivate] = new RoleConfig { Health = 10, HumeShield = 0, IsEnabled = true, IsGod = false },
+            [RoleTypeId.NtfSergeant] = new RoleConfig { Health = 10, HumeShield = 0, IsEnabled = true, IsGod = false },
+            [RoleTypeId.NtfSpecialist] = new RoleConfig { Health = 100, HumeShield = 0, IsEnabled = true, IsGod = false },
+            [RoleTypeId.NtfCaptain] = new RoleConfig { Health = 10, HumeShield = 0, IsEnabled = true, IsGod = false },
 
-            // Tutorial & Other
-            [RoleTypeId.Tutorial] = new RoleConfig { Health = 100, HumeShield = 0, IsEnabled = true },
+            // Protected Roles (always enabled)
+            [RoleTypeId.Tutorial] = new RoleConfig { Health = 100, HumeShield = 0, IsEnabled = true, IsGod = false },
+            [RoleTypeId.Spectator] = new RoleConfig { Health = 0, HumeShield = 0, IsEnabled = true, IsGod = false },
+            [RoleTypeId.None] = new RoleConfig { Health = 0, HumeShield = 0, IsEnabled = true, IsGod = false },
+            [RoleTypeId.Overwatch] = new RoleConfig { Health = 0, HumeShield = 0, IsEnabled = true, IsGod = false },
+            [RoleTypeId.Filmmaker] = new RoleConfig { Health = 0, HumeShield = 0, IsEnabled = true, IsGod = false },
         };
     }
 
@@ -48,5 +52,6 @@ namespace SCPBuff
         public float Health { get; set; }
         public float HumeShield { get; set; }
         public bool IsEnabled { get; set; } = true;
+        public bool IsGod { get; set; } = false;
     }
 }

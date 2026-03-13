@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Text;
 using CommandSystem;
 using Exiled.API.Features;
 using Exiled.Permissions.Extensions;
@@ -23,52 +24,236 @@ namespace SCPBuff.Commands
                 return false;
             }
 
-            if (arguments.Count < 2)
+            if (arguments.Count < 1)
             {
                 response = GetUsage();
                 return false;
             }
 
-            var roleArg = arguments.At(0).ToLower();
-            var actionArg = arguments.At(1).ToLower();
+            var subCommand = arguments.At(0).ToLower();
 
-            if (roleArg == "list")
+            if (subCommand == "rolehelp" || subCommand == "roles" || subCommand == "listroles")
             {
                 response = GetRoleList();
                 return true;
             }
-
-            bool enable;
-            if (actionArg == "on" || actionArg == "enable" || actionArg == "true")
-                enable = true;
-            else if (actionArg == "off" || actionArg == "disable" || actionArg == "false")
-                enable = false;
+            else if (subCommand == "god")
+            {
+                return HandleGodCommand(arguments, sender, out response);
+            }
+            else if (subCommand == "hp" || subCommand == "health")
+            {
+                return HandleHealthCommand(arguments, sender, out response);
+            }
+            else if (subCommand == "hs" || subCommand == "humeshield" || subCommand == "shield")
+            {
+                return HandleHumeShieldCommand(arguments, sender, out response);
+            }
+            else if (subCommand == "status" || subCommand == "info")
+            {
+                return HandleStatusCommand(arguments, sender, out response);
+            }
+            else if (subCommand == "enable" || subCommand == "disable")
+            {
+                return HandleEnableDisableCommand(arguments, subCommand, sender, out response);
+            }
             else
             {
-                response = "Invalid action. Use 'on' or 'off'.";
+                response = GetUsage();
+                return false;
+            }
+        }
+
+        private bool HandleGodCommand(ArraySegment<string> arguments, ICommandSender sender, out string response)
+        {
+            if (arguments.Count < 3)
+            {
+                response = "Usage: scpbuff god <role> <true/false>\nExample: scpbuff god scp173 true";
                 return false;
             }
 
-            if (roleArg == "all")
-            {
-                // Process all roles
-                int count = 0;
-                foreach (var role in SCPBuff.Instance.Config.RoleConfigs.Keys)
-                {
-                    SCPBuff.Instance.ToggleRole(role, enable);
-                    count++;
-                }
-
-                response = $"{count} roles have been {(enable ? "enabled" : "disabled")}!";
-                return true;
-            }
-
-            // Parse role name
+            var roleArg = arguments.At(1);
             var roleType = ParseRoleType(roleArg);
 
             if (roleType == RoleTypeId.None)
             {
-                response = $"Unknown role: {roleArg}\nUse 'scpbuff list' to see available roles";
+                response = $"Unknown role: {roleArg}\nUse 'scpbuff rolehelp' to see available roles";
+                return false;
+            }
+
+            bool enable;
+            var valueArg = arguments.At(2).ToLower();
+            if (valueArg == "true" || valueArg == "1" || valueArg == "on" || valueArg == "yes")
+            {
+                enable = true;
+            }
+            else if (valueArg == "false" || valueArg == "0" || valueArg == "off" || valueArg == "no")
+            {
+                enable = false;
+            }
+            else
+            {
+                response = "Invalid value. Use true or false.";
+                return false;
+            }
+
+            // Protected roles always have god mode false
+            if (RoleExtensions.ProtectedRoles.Contains(roleType) && enable)
+            {
+                response = $"Cannot enable god mode for protected role: {roleType}";
+                return false;
+            }
+
+            SCPBuff.Instance.SetRoleGodMode(roleType, enable);
+            response = $"God mode for {roleType} has been {(enable ? "enabled" : "disabled")}!";
+            return true;
+        }
+
+        private bool HandleHealthCommand(ArraySegment<string> arguments, ICommandSender sender, out string response)
+        {
+            if (arguments.Count < 3)
+            {
+                response = "Usage: scpbuff hp <role> <value>\nExample: scpbuff hp scp173 5000";
+                return false;
+            }
+
+            var roleArg = arguments.At(1);
+            var roleType = ParseRoleType(roleArg);
+
+            if (roleType == RoleTypeId.None)
+            {
+                response = $"Unknown role: {roleArg}\nUse 'scpbuff rolehelp' to see available roles";
+                return false;
+            }
+
+            float health;
+            if (!float.TryParse(arguments.At(2), out health) || health < 0)
+            {
+                response = "Invalid health value. Must be a positive number.";
+                return false;
+            }
+
+            SCPBuff.Instance.SetRoleHealth(roleType, health, true);
+            response = $"Health for {roleType} has been permanently set to {health}!";
+            return true;
+        }
+
+        private bool HandleHumeShieldCommand(ArraySegment<string> arguments, ICommandSender sender, out string response)
+        {
+            if (arguments.Count < 3)
+            {
+                response = "Usage: scpbuff hs <role> <value>\nExample: scpbuff hs scp173 1000";
+                return false;
+            }
+
+            var roleArg = arguments.At(1);
+            var roleType = ParseRoleType(roleArg);
+
+            if (roleType == RoleTypeId.None)
+            {
+                response = $"Unknown role: {roleArg}\nUse 'scpbuff rolehelp' to see available roles";
+                return false;
+            }
+
+            float humeShield;
+            if (!float.TryParse(arguments.At(2), out humeShield) || humeShield < 0)
+            {
+                response = "Invalid hume shield value. Must be a positive number.";
+                return false;
+            }
+
+            SCPBuff.Instance.SetRoleHumeShield(roleType, humeShield, true);
+            response = $"Hume shield for {roleType} has been permanently set to {humeShield}!";
+            return true;
+        }
+
+        private bool HandleStatusCommand(ArraySegment<string> arguments, ICommandSender sender, out string response)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine("=== SCP Buff Role Status ===");
+
+            if (arguments.Count >= 2)
+            {
+                var roleArg = arguments.At(1);
+                var roleType = ParseRoleType(roleArg);
+
+                if (roleType == RoleTypeId.None)
+                {
+                    response = $"Unknown role: {roleArg}";
+                    return false;
+                }
+
+                bool enabled = SCPBuff.Instance.GetRoleStatus(roleType);
+                bool god = SCPBuff.Instance.GetRoleGodMode(roleType);
+
+                if (SCPBuff.Instance.Config.RoleConfigs.TryGetValue(roleType, out var config))
+                {
+                    sb.AppendLine($"Role: {roleType}");
+                    sb.AppendLine($"  Protected: {RoleExtensions.ProtectedRoles.Contains(roleType)}");
+                    sb.AppendLine($"  Enabled: {enabled}");
+                    sb.AppendLine($"  Health: {config.Health}");
+                    sb.AppendLine($"  Hume Shield: {config.HumeShield}");
+                    sb.AppendLine($"  God Mode: {god}");
+                }
+                else
+                {
+                    sb.AppendLine($"No configuration found for {roleType}");
+                }
+            }
+            else
+            {
+                var disabledRoles = SCPBuff.Instance.GetDisabledRoles();
+                var godRoles = SCPBuff.Instance.GetGodRoles();
+
+                sb.AppendLine($"Total roles configured: {SCPBuff.Instance.Config.RoleConfigs.Count}");
+                sb.AppendLine($"Protected roles: {string.Join(", ", RoleExtensions.ProtectedRoles)}");
+                sb.AppendLine($"Disabled roles: {(disabledRoles.Count == 0 ? "None" : string.Join(", ", disabledRoles))}");
+                sb.AppendLine($"God mode roles: {(godRoles.Count == 0 ? "None" : string.Join(", ", godRoles))}");
+                sb.AppendLine("\nUse 'scpbuff status <role>' for detailed info");
+            }
+
+            response = sb.ToString();
+            return true;
+        }
+
+        private bool HandleEnableDisableCommand(ArraySegment<string> arguments, string action, ICommandSender sender, out string response)
+        {
+            if (arguments.Count < 2)
+            {
+                response = $"Usage: scpbuff {action} <role/all>\nExample: scpbuff {action} scp173";
+                return false;
+            }
+
+            var roleArg = arguments.At(1).ToLower();
+            bool enable = action == "enable";
+
+            if (roleArg == "all")
+            {
+                int count = 0;
+                foreach (var role in SCPBuff.Instance.Config.RoleConfigs.Keys.ToList())
+                {
+                    if (RoleExtensions.ProtectedRoles.Contains(role))
+                        continue;
+
+                    SCPBuff.Instance.ToggleRole(role, enable);
+                    count++;
+                }
+
+                response = $"{count} roles have been {(enable ? "enabled" : "disabled")}! (Protected roles: Tutorial, Spectator, None, Overwatch, Filmmaker remain unchanged)";
+                return true;
+            }
+
+            var roleType = ParseRoleType(roleArg);
+
+            if (roleType == RoleTypeId.None)
+            {
+                response = $"Unknown role: {roleArg}\nUse 'scpbuff rolehelp' to see available roles";
+                return false;
+            }
+
+            if (RoleExtensions.ProtectedRoles.Contains(roleType))
+            {
+                response = $"Role {roleType} is protected and cannot be {(enable ? "enabled/disabled" : "disabled")}!";
                 return false;
             }
 
@@ -80,121 +265,142 @@ namespace SCPBuff.Commands
 
         private string GetUsage()
         {
-            return "Usage: scpbuff <role/all> <on/off> OR scpbuff list\n" +
+            return "SCP Buff Commands:\n" +
+                   "  scpbuff rolehelp                    - List all available roles\n" +
+                   "  scpbuff status [role]               - Show status of all roles or specific role\n" +
+                   "  scpbuff enable/disable <role/all>   - Enable or disable a role\n" +
+                   "  scpbuff god <role> <true/false>     - Enable/disable god mode for a role\n" +
+                   "  scpbuff hp <role> <value>           - PERMANENTLY set health for a role\n" +
+                   "  scpbuff hs <role> <value>           - PERMANENTLY set hume shield for a role\n\n" +
                    "Examples:\n" +
-                   "  scpbuff scp173 off - Disable SCP-173\n" +
-                   "  scpbuff classd on - Enable Class-D\n" +
-                   "  scpbuff all on - Enable all roles\n" +
-                   "  scpbuff list - List all configurable roles";
+                   "  scpbuff disable all                  - Disable all non-protected roles (players spawn as Tutorial)\n" +
+                   "  scpbuff god scp173 true             - Make SCP-173 immortal\n" +
+                   "  scpbuff hp scp173 5000              - Permanently set SCP-173 health to 5000\n" +
+                   "  scpbuff hs scp173 1000              - Permanently set SCP-173 hume shield to 1000\n" +
+                   "  scpbuff status scp173                - Check SCP-173 status";
         }
 
         private string GetRoleList()
         {
-            var scpRoles = SCPBuff.Instance.Config.RoleConfigs.Keys
-                .Where(r => r.ToString().StartsWith("Scp"))
-                .Select(r => r.ToString().Replace("Scp", ""))
-                .OrderBy(r => r);
+            var sb = new StringBuilder();
+            sb.AppendLine("=== ALL AVAILABLE ROLES ===");
 
-            var humanRoles = SCPBuff.Instance.Config.RoleConfigs.Keys
-                .Where(r => !r.ToString().StartsWith("Scp"))
-                .Select(r => r.ToString())
-                .OrderBy(r => r);
+            var allRoles = Enum.GetValues(typeof(RoleTypeId)).Cast<RoleTypeId>().ToList();
+            allRoles.Sort((a, b) => a.ToString().CompareTo(b.ToString()));
 
-            return "Available SCP roles: " + string.Join(", ", scpRoles) + "\n" +
-                   "Available human roles: " + string.Join(", ", humanRoles);
+            var scpRoles = new System.Collections.Generic.List<RoleTypeId>();
+            var humanRoles = new System.Collections.Generic.List<RoleTypeId>();
+            var otherRoles = new System.Collections.Generic.List<RoleTypeId>();
+            var protectedRoles = new System.Collections.Generic.List<RoleTypeId>();
+
+            foreach (var role in allRoles)
+            {
+                if (RoleExtensions.ProtectedRoles.Contains(role))
+                {
+                    protectedRoles.Add(role);
+                }
+                else if (role.ToString().StartsWith("Scp") && role != RoleTypeId.Scp0492)
+                {
+                    scpRoles.Add(role);
+                }
+                else if (role == RoleTypeId.Scp0492 || role == RoleTypeId.ClassD || role == RoleTypeId.Scientist ||
+                         role.ToString().StartsWith("Facility") || role.ToString().StartsWith("Ntf") ||
+                         role.ToString().StartsWith("Chaos"))
+                {
+                    humanRoles.Add(role);
+                }
+                else
+                {
+                    otherRoles.Add(role);
+                }
+            }
+
+            sb.AppendLine("\n🔴 SCP Roles:");
+            foreach (var role in scpRoles)
+            {
+                string status = SCPBuff.Instance.Config.RoleConfigs.ContainsKey(role) ?
+                    (SCPBuff.Instance.GetRoleStatus(role) ? "✓" : "✗") : "?";
+                string god = SCPBuff.Instance.GetRoleGodMode(role) ? " [GOD]" : "";
+                sb.AppendLine($"  {status} {role}{god}");
+            }
+
+            sb.AppendLine("\n👤 Human Roles:");
+            foreach (var role in humanRoles)
+            {
+                string status = SCPBuff.Instance.Config.RoleConfigs.ContainsKey(role) ?
+                    (SCPBuff.Instance.GetRoleStatus(role) ? "✓" : "✗") : "?";
+                string god = SCPBuff.Instance.GetRoleGodMode(role) ? " [GOD]" : "";
+                sb.AppendLine($"  {status} {role}{god}");
+            }
+
+            sb.AppendLine("\n⚪ Other Roles:");
+            foreach (var role in otherRoles)
+            {
+                if (RoleExtensions.ProtectedRoles.Contains(role)) continue;
+                string status = SCPBuff.Instance.Config.RoleConfigs.ContainsKey(role) ?
+                    (SCPBuff.Instance.GetRoleStatus(role) ? "✓" : "✗") : "?";
+                string god = SCPBuff.Instance.GetRoleGodMode(role) ? " [GOD]" : "";
+                sb.AppendLine($"  {status} {role}{god}");
+            }
+
+            sb.AppendLine("\n🛡️ Protected Roles (always enabled, cannot be disabled):");
+            foreach (var role in protectedRoles)
+            {
+                sb.AppendLine($"  • {role}");
+            }
+
+            sb.AppendLine("\n📝 Usage in commands:");
+            sb.AppendLine("  • Use full role name: Scp173, ClassD, NtfCaptain");
+            sb.AppendLine("  • Or short names: 173, classd, captain, zombie, guard");
+
+            return sb.ToString();
         }
 
         private RoleTypeId ParseRoleType(string input)
         {
-            input = input.ToLower();
+            input = input.ToLower().Replace(" ", "").Replace("scp", "");
 
-            // Handle SCP numbers
-            if (input.StartsWith("scp"))
-                input = input.Substring(3);
-
-            // First try direct parse
-            if (Enum.TryParse<RoleTypeId>($"Scp{input}", true, out var roleType))
-                return roleType;
-
-            if (Enum.TryParse<RoleTypeId>(input, true, out roleType))
-                return roleType;
-
-            // Manual mapping for common names
-            switch (input)
+            // Try direct parse
+            foreach (RoleTypeId role in Enum.GetValues(typeof(RoleTypeId)))
             {
-                case "173": return RoleTypeId.Scp173;
-                case "096": return RoleTypeId.Scp096;
-                case "106": return RoleTypeId.Scp106;
-                case "049": return RoleTypeId.Scp049;
-                case "939": return RoleTypeId.Scp939;
-                case "3114": return RoleTypeId.Scp3114;
-                case "0492":
-                case "zombie": return RoleTypeId.Scp0492;
-                case "079": return RoleTypeId.Scp079;
-
-                case "classd":
-                case "dclass":
-                case "d-class": return RoleTypeId.ClassD;
-                case "scientist":
-                case "sci": return RoleTypeId.Scientist;
-                case "facilityguard":
-                case "guard": return RoleTypeId.FacilityGuard;
-                case "tutorial": return RoleTypeId.Tutorial;
-
-                case "ntfprivate":
-                case "private": return RoleTypeId.NtfPrivate;
-                case "ntfsergeant":
-                case "sergeant": return RoleTypeId.NtfSergeant;
-                case "ntfspecialist":
-                case "specialist": return RoleTypeId.NtfSpecialist;
-                case "ntfcaptain":
-                case "captain": return RoleTypeId.NtfCaptain;
-
-                case "chaosconscript":
-                case "conscript": return RoleTypeId.ChaosConscript;
-                case "chaosrepressor":
-                case "repressor": return RoleTypeId.ChaosRepressor;
-                case "chaosmarauder":
-                case "marauder": return RoleTypeId.ChaosMarauder;
-                case "chaosrifleman":
-                case "rifleman": return RoleTypeId.ChaosRifleman;
-
-                default: return RoleTypeId.None;
-            }
-        }
-    }
-
-    [CommandHandler(typeof(RemoteAdminCommandHandler))]
-    public class RoleStatusCommand : ICommand
-    {
-        public string Command { get; } = "rolestatus";
-        public string[] Aliases { get; } = new[] { "roleinfo", "buffstatus" };
-        public string Description { get; } = "Check status of roles in SCP Buff";
-
-        public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)
-        {
-            if (!sender.CheckPermission("scpbuff.admin"))
-            {
-                response = "You don't have permission to use this command!";
-                return false;
+                if (role.ToString().ToLower() == input ||
+                    role.ToString().ToLower().Replace("scp", "") == input ||
+                    role.ToString().ToLower().Contains(input))
+                {
+                    return role;
+                }
             }
 
-            var disabledRoles = SCPBuff.Instance.Config.RoleConfigs.Keys
-                .Where(r => !SCPBuff.Instance.GetRoleStatus(r))
-                .OrderBy(r => r.ToString())
-                .ToList();
+            // Manual mapping (old style)
+            if (input == "173") return RoleTypeId.Scp173;
+            if (input == "096") return RoleTypeId.Scp096;
+            if (input == "106") return RoleTypeId.Scp106;
+            if (input == "049") return RoleTypeId.Scp049;
+            if (input == "939") return RoleTypeId.Scp939;
+            if (input == "3114") return RoleTypeId.Scp3114;
+            if (input == "0492" || input == "zombie") return RoleTypeId.Scp0492;
+            if (input == "079") return RoleTypeId.Scp079;
 
-            if (disabledRoles.Count == 0)
-            {
-                response = "All roles are currently enabled.";
-            }
-            else
-            {
-                response = $"Disabled roles ({disabledRoles.Count}):\n" +
-                          string.Join("\n", disabledRoles.Select(r => $"  • {r}"));
-            }
+            if (input == "classd" || input == "dclass" || input == "d-class") return RoleTypeId.ClassD;
+            if (input == "scientist" || input == "sci") return RoleTypeId.Scientist;
+            if (input == "facilityguard" || input == "guard") return RoleTypeId.FacilityGuard;
 
-            return true;
+            if (input == "tutorial" || input == "tut") return RoleTypeId.Tutorial;
+            if (input == "spectator" || input == "spec") return RoleTypeId.Spectator;
+            if (input == "overwatch") return RoleTypeId.Overwatch;
+            if (input == "filmmaker") return RoleTypeId.Filmmaker;
+
+            if (input == "ntfprivate" || input == "private") return RoleTypeId.NtfPrivate;
+            if (input == "ntfsergeant" || input == "sergeant") return RoleTypeId.NtfSergeant;
+            if (input == "ntfspecialist" || input == "specialist") return RoleTypeId.NtfSpecialist;
+            if (input == "ntfcaptain" || input == "captain") return RoleTypeId.NtfCaptain;
+
+            if (input == "chaosconscript" || input == "conscript") return RoleTypeId.ChaosConscript;
+            if (input == "chaosrepressor" || input == "repressor") return RoleTypeId.ChaosRepressor;
+            if (input == "chaosmarauder" || input == "marauder") return RoleTypeId.ChaosMarauder;
+            if (input == "chaosrifleman" || input == "rifleman") return RoleTypeId.ChaosRifleman;
+
+            return RoleTypeId.None;
         }
     }
 }
