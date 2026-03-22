@@ -1,6 +1,11 @@
 # SCP-Buff
 SCPBuff is a plugin for SCP: Secret Laboratory servers that allows you to fine-tune the parameters of SCP objects, including health (HP) and humus shield (HS). The plugin provides administrators with flexible control over the game's balance.
 
+| Framework | Version    |  Release                                                              |
+|:---------:|:----------:|:----------------------------------------------------------------------:|
+| Exiled    | ≥ 9.13.X    | [⬇️](https://github.com/MisterDarvi/SCP-Buff/releases)        |
+| LabAPI    | ≥ 1.1.5      | [⬇️](https://github.com/MisterDarvi/SCP-Buff/releases) |
+
 ## 🍵Main features
 📊 Configure HP and HS for each SCP via the config
 
