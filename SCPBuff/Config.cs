@@ -33,10 +33,10 @@ namespace SCPBuff
             [RoleTypeId.ChaosRifleman] = new RoleConfig { Health = 100, HumeShield = 0, IsEnabled = true, IsGod = false },
 
             // Foundation Forces
-            [RoleTypeId.NtfPrivate] = new RoleConfig { Health = 10, HumeShield = 0, IsEnabled = true, IsGod = false },
-            [RoleTypeId.NtfSergeant] = new RoleConfig { Health = 10, HumeShield = 0, IsEnabled = true, IsGod = false },
+            [RoleTypeId.NtfPrivate] = new RoleConfig { Health = 100, HumeShield = 0, IsEnabled = true, IsGod = false },
+            [RoleTypeId.NtfSergeant] = new RoleConfig { Health = 100, HumeShield = 0, IsEnabled = true, IsGod = false },
             [RoleTypeId.NtfSpecialist] = new RoleConfig { Health = 100, HumeShield = 0, IsEnabled = true, IsGod = false },
-            [RoleTypeId.NtfCaptain] = new RoleConfig { Health = 10, HumeShield = 0, IsEnabled = true, IsGod = false },
+            [RoleTypeId.NtfCaptain] = new RoleConfig { Health = 100, HumeShield = 0, IsEnabled = true, IsGod = false },
 
             // Protected Roles (always enabled)
             [RoleTypeId.Tutorial] = new RoleConfig { Health = 100, HumeShield = 0, IsEnabled = true, IsGod = false },
